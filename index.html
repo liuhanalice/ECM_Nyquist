@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Circuit Nyquist Plot</title>
+    <!-- Add Bootstrap CSS link -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Updated Plotly link -->
+    <script src="https://cdn.plot.ly/plotly-2.14.0.min.js"></script>
+    <!-- math.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.5.0/math.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1 class="my-4 text-center">Interactive Circuit Nyquist Plot</h1>
+
+        <!-- Circuit Selection -->
+        <div class="row mb-4 text-center">
+            <div class="col-md-6">
+                <div class="circuit-option" onclick="selectCircuit('Circuit1')">
+                    <img src="circuits/C1.png" alt="R0 + (R1 || C1)" class="img-fluid">
+                    <p>C1: R0 + (R1 || C1)</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="circuit-option" onclick="selectCircuit('Circuit2')">
+                    <img src="circuits/C2.png" alt="R0 + (R1 || C1) + (R2 || C2)" class="img-fluid">
+                    <p>C2: R0 + (R1 || C1) + (R2 || C2)</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="circuit-option" onclick="selectCircuit('Circuit3')">
+                    <img src="circuits/C3.png" alt="R0 + ((R1 + Aw) || C1)" class="img-fluid">
+                    <p>C3: R0 + ((R1 + Aw) || C1) </p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="circuit-option" onclick="selectCircuit('Circuit4')">
+                    <img src="circuits/C4.png" alt="R0 + (R1 || C1) + ((R2 + Aw) || C2)" class="img-fluid">
+                    <p>C4: R0 + (R1 || C1) + ((R2 + Aw) || C2) </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls for the selected circuit model -->
+        <div class="row">
+            <div class="controls col-4">
+                <div id="Circuit1" class="model-controls" style="display: none;">
+                    <div class="mb-3">
+                        <label for="R0" class="form-label">R0:</label>
+                        <input type="range" class="form-range" id="R0" min="0.001" max="1" value="0" step="0.001">
+                        <input type="number" id="R0-input" value="0" class="form-control" step="0.001" max="1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="R1" class="form-label">R1:</label>
+                        <input type="range" class="form-range" id="R1" min="0.0001" max="0.01" value="0.0001" step="0.0001">
+                        <input type="number" id="R1-input" value="0.0001" class="form-control" step="0.0001" max="0.01">
+                    </div>
+                    <div class="mb-3">
+                        <label for="C1" class="form-label">C1:</label>
+                        <input type="range" class="form-range" id="C1" min="1e-6" max="0.1" value="1e-6" step="1e-6">
+                        <input type="number" id="C1-input" value="1e-6" class="form-control" step="1e-6" max="0.1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="if1" class="form-label">ideal_factor1 (=1 is ideal capacitor):</label>
+                        <input type="range" class="form-range" id="if1" min="0.8" max="1" value="1" step="0.01">
+                        <input type="number" id="if1-input" value="1" class="form-control" step="0.001" max="1">
+                    </div>
+                </div>
+
+                <div id="Circuit2" class="model-controls" style="display: none;">
+                    <div class="mb-3">
+                        <label for="R0_2" class="form-label">R0:</label>
+                        <input type="range" class="form-range" id="R0_2" min="0.001" max="1" value="0" step="0.001">
+                        <input type="number" id="R0_2-input" value="0" class="form-control" step="0.001" max="1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="R1_2" class="form-label">R1:</label>
+                        <input type="range" class="form-range" id="R1_2" min="0.0001" max="0.1" value="0.0001" step="0.0001">
+                        <input type="number" id="R1_2-input" value="0.0001" class="form-control" step="0.0001" max="0.1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="C1_2" class="form-label">C1:</label>
+                        <input type="range" class="form-range" id="C1_2" min="1e-6" max="0.1" value="1e-6" step="1e-6">
+                        <input type="number" id="C1_2-input" value="1e-6" class="form-control" step="1e-6" max="0.1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="if1_2" class="form-label">ideal_factor1 (=1 is ideal capacitor):</label>
+                        <input type="range" class="form-range" id="if1_2" min="0.8" max="1" value="1" step="0.01">
+                        <input type="number" id="if1_2-input" value="1" class="form-control" step="0.001" max="1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="R2_2" class="form-label">R2:</label>
+                        <input type="range" class="form-range" id="R2_2" min="0.0001" max="0.1" value="0.0001" step="0.0001">
+                        <input type="number" id="R2_2-input" value="0.0001" class="form-control" step="0.0001" max="0.1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="C2_2" class="form-label">C2:</label>
+                        <input type="range" class="form-range" id="C2_2" min="1e-6" max="0.1" value="1e-6" step="1e-6">
+                        <input type="number" id="C2_2-input" value="1e-6" class="form-control" step="1e-6" max="0.1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="if2_2" class="form-label">ideal_factor2 (=1 is ideal capacitor):</label>
+                        <input type="range" class="form-range" id="if2_2" min="0.8" max="1" value="1" step="0.01">
+                        <input type="number" id="if2_2-input" value="1" class="form-control" step="0.001" max="1">
+                    </div>
+                </div>
+
+                <div id="Circuit3" class="model-controls" style="display: none;">
+                    <div class="mb-3">
+                        <label for="R0_3" class="form-label">R0:</label>
+                        <input type="range" class="form-range" id="R0_3" min="0.001" max="1" value="0" step="0.001">
+                        <input type="number" id="R0_3-input" value="0" class="form-control" step="0.001" max="1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="R1_3" class="form-label">R1:</label>
+                        <input type="range" class="form-range" id="R1_3" min="0.0001" max="0.1" value="0.0001" step="0.0001">
+                        <input type="number" id="R1_3-input" value="0.0001" class="form-control" step="0.0001" max="0.1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="C1_3" class="form-label">C1:</label>
+                        <input type="range" class="form-range" id="C1_3" min="1e-6" max="0.1" value="1e-6" step="1e-6">
+                        <input type="number" id="C1_3-input" value="1e-6" class="form-control" step="1e-6" max="0.1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="if1_3" class="form-label">ideal_factor1 (=1 is ideal capacitor):</label>
+                        <input type="range" class="form-range" id="if1_3" min="0.8" max="1" value="1" step="0.01">
+                        <input type="number" id="if1_3-input" value="1" class="form-control" step="0.001" max="1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="Aw_3" class="form-label">Warburg coefficient (normalized):</label>
+                        <input type="range" class="form-range" id="Aw_3" min="0.0001" max="1" value="0.0001" step="0.0001">
+                        <input type="number" id="Aw_3-input" value="0.0001" class="form-control" step="0.0001" max="1">
+                    </div>
+                </div>
+
+                <div id="Circuit4" class="model-controls" style="display: none;">
+                    <div class="mb-3">
+                        <label for="R0_4" class="form-label">R0:</label>
+                        <input type="range" class="form-range" id="R0_4" min="0.001" max="1" value="0" step="0.001">
+                        <input type="number" id="R0_4-input" value="0" class="form-control" step="0.001" max="1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="R1_4" class="form-label">R1:</label>
+                        <input type="range" class="form-range" id="R1_4" min="0.0001" max="0.1" value="0.0001" step="0.0001">
+                        <input type="number" id="R1_4-input" value="0.0001" class="form-control" step="0.0001" max="0.1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="C1_4" class="form-label">C1:</label>
+                        <input type="range" class="form-range" id="C1_4" min="1e-6" max="0.1" value="1e-6" step="1e-6">
+                        <input type="number" id="C1_4-input" value="1e-6" class="form-control" step="1e-6" max="0.1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="if1_4" class="form-label">ideal_factor1 (=1 is ideal capacitor):</label>
+                        <input type="range" class="form-range" id="if1_4" min="0.8" max="1" value="1" step="0.01">
+                        <input type="number" id="if1_4-input" value="1" class="form-control" step="0.001" max="1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="R2_4" class="form-label">R2:</label>
+                        <input type="range" class="form-range" id="R2_4" min="0.0001" max="0.1" value="0.0001" step="0.0001">
+                        <input type="number" id="R2_4-input" value="0.0001" class="form-control" step="0.0001" max="0.1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="C2_4" class="form-label">C2:</label>
+                        <input type="range" class="form-range" id="C2_4" min="1e-6" max="0.1" value="1e-6" step="1e-6">
+                        <input type="number" id="C2_4-input" value="1e-6" class="form-control" step="1e-6" max="0.1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="if2_4" class="form-label">ideal_factor2 (=1 is ideal capacitor):</label>
+                        <input type="range" class="form-range" id="if2_4" min="0.8" max="1" value="1" step="0.01">
+                        <input type="number" id="if2_4-input" value="1" class="form-control" step="0.001" max="1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="Aw_4" class="form-label">Warburg coefficient (normalized):</label>
+                        <input type="range" class="form-range" id="Aw_4" min="0.0001" max="1" value="0.0001" step="0.0001">
+                        <input type="number" id="Aw_4-input" value="0.0001" class="form-control" step="0.0001"  max="1">
+                    </div>
+                </div>
+
+            <!-- Frequency Settings -->
+                <div class="mb-3">
+                    <label for="freq-min" class="form-label">Frequency Range (Hz):</label>
+                    <input type="number" id="freq-min-input" value="0.0001" step="0.0001" class="form-control"> 
+                    to
+                    <input type="number" id="freq-max-input" value="100000" step="1" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label for="num-points" class="form-label">Number of Sampled Points:</label>
+                    <input type="number" id="num-points-input" value="100" step="1" class="form-control">
+                </div>
+            </div>
+
+            <!-- Plot Container -->
+            <div class="col-8">
+                <div id="nyquist-plot" class="row"></div>
+                <div id="alt-plot" class="row"></div>
+
+            </div>
+            
+        </div>
+       
+
+    </div>
+
+    <!-- Add Bootstrap and jQuery Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.container {
+    /* height: 600px; Added height to the parent */
+    display: flex;
+    justify-content: center; /* Centers the div */
+    align-items: center; /* Centers vertically */
+}
+
+.circuit-selection {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 20px;
+}
+
+.circuit-option {
+    text-align: center;
+    cursor: pointer;
+}
+
+.circuit-option img {
+    width: 200px;
+    height: auto;
+    border: 2px solid #ccc;
+    border-radius: 10px;
+}
+
+.circuit-option p {
+    margin-top: 10px;
+    font-size: 16px;
+}
+
+.controls {
+    display: flex; /* Use flexbox to align the divs horizontally */
+    gap: 10px; /* Optional: adds spacing between divs */
+    align-items: center; /* Optional: vertically centers the items */
+}
+
+.control-group {
+    margin: 10px 0;
+}
+
+.model-controls {
+    display: block;
+}
+
+
