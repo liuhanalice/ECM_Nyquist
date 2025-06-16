@@ -45,7 +45,7 @@
 
         <!-- Controls for the selected circuit model -->
         <div class="row">
-            <div class="controls col-4">
+            <div class="controls col-3">
                 <div id="Circuit1" class="model-controls" style="display: none;">
                     <div class="mb-3">
                         <label for="R0" class="form-label">R0:</label>
@@ -191,10 +191,16 @@
                 </div>
             </div>
 
+            <div class="controls col-3">
+                <button id="add-semicircle-btn" class="button btn-primary">Add Semicircle</button>
+                <div id="semicircle-controls" class="mb-3"></div>
+            </div>
+           
+
             <!-- Plot Container -->
-            <div class="col-8">
+            <div class="col-6">
                 <div id="nyquist-plot" class="row"></div>
-                <div id="alt-plot" class="row"></div>
+                <div id="fix-plot" class="row"></div>
 
             </div>
             

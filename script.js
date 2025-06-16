@@ -1,3 +1,13 @@
+// --- Configuration ---
+const colorPalette = ['red', 'green', 'blue', 'orange', 'purple', 'brown', 'cyan', 'magenta', 'lime', 'gold'];
+
+let colorIndex = 0;
+const semicircleControls = document.getElementById('semicircle-controls');
+const addSemicircleBtn = document.getElementById('add-semicircle-btn');
+let nyquistTraceIndex = null;
+
+
+// --- Functions ---
 // Function to calculate the impedance and extract real and imaginary parts for different circuits
 function calculateImpedance(circuitType, parameters, f) {
     let omega = 2 * Math.PI * f; // Angular frequency
@@ -8,12 +18,6 @@ function calculateImpedance(circuitType, parameters, f) {
         console.info("Omega is zero, skipping calculation at f = 0.");
         return { real: NaN, neg_imag: NaN };  // Avoid division by zero
     }
-
-    // // Check for invalid parameters
-    // if (isNaN(R0) || isNaN(R1) || isNaN(C1) || (circuitType === "C2" && isNaN(AW1))) {
-    //     console.error("Invalid parameters for circuit:", parameters);
-    //     return { real: NaN, imag: NaN };  // Return NaN if any parameter is invalid
-    // }
 
     if (circuitType === "Circuit1") {
         // Model 1: R0 + (R1 || C1)
@@ -133,8 +137,62 @@ function nyquistData(circuitType, parameters, freqMin, freqMax, numPoints) {
     return { real: impedanceReal, neg_imag: impedanceNegImag };
 }
 
-// Function to update the Nyquist plot
-function updatePlot() {
+// Function to init the Nyquist Plot
+function initNyquistPlot() {
+    let impedance = getCircuitImpedance()
+    console.log(impedance)
+    if(!impedance){
+        return;
+    }
+
+    const nyquistTrace = {
+        x: impedance.real,
+        y: impedance.neg_imag,
+        mode: 'lines+markers',
+        type: 'scatter',
+        name: 'Nyquist Plot',
+        uid: 'nyquist'  // Unique ID for updating later
+    };
+
+    const layout = {
+        title: 'Nyquist Plot',
+        xaxis: { title: 'Real Impedance (Ω)' },
+        yaxis: { title: '- Imaginary Impedance (Ω)' },
+        showlegend: true
+    };
+
+    Plotly.newPlot('nyquist-plot', [nyquistTrace], layout).then((plot) => {
+        nyquistTraceIndex = 0; // since it's the first trace
+    });
+
+    const nyquistTraceFix = {
+        x: impedance.real,
+        y: impedance.neg_imag,
+        mode: 'lines+markers',
+        type: 'scatter',
+        name: 'Nyquist Plot (Fix Grid)',
+        uid: 'fix'  // Unique ID for updating later
+    };
+
+    const layout2 = {
+        title: 'Nyquist Plot (fixed grid)',
+        xaxis: { 
+            title: 'Real Impedance (Ω)', 
+            range: [0, 0.02],
+            scaleanchor: 'y',  // maintain 1:1 aspect ratio with y-axis
+            scaleratio: 1
+        },
+        yaxis: { 
+            title: '- Imaginary Impedance (Ω)', 
+            range: [0, 0.02] 
+        },
+        showlegend: false
+    };
+
+    Plotly.newPlot('fix-plot', [nyquistTraceFix], layout2);
+}
+
+function getCircuitImpedance(){
     let circuitType = document.querySelector(".model-controls[style*='display: block']");
     
     if (!circuitType) {
@@ -196,61 +254,121 @@ function updatePlot() {
     }
 
     console.log("Plot Data:", impedance.real, impedance.neg_imag);
-
-    // Clear any existing plot before drawing a new one
-    Plotly.purge('nyquist-plot');
-
-    // Debugging logs for impedance values
-    console.log("Real Values:", impedance.real);
-    console.log("Neg Imaginary Values:", impedance.neg_imag);
-
-    // Ensure that y values are negative imaginary values
-    let data = [{
-        x: impedance.real,
-        y: impedance.neg_imag,//Ensure y is the negative of imaginary values
-        mode: 'lines+markers', // Add markers to see sampled points
-        type: 'scatter',
-        name: 'Nyquist Plot'
-    }];
-
-    //  // Get the min and max values of real and imaginary components
-    // let realMin = Math.min(...impedance.real);
-    // let realMax = Math.max(...impedance.real);
-    // let imagMin = Math.min(...impedance.imag);
-    // let imagMax = Math.max(...impedance.imag);
-   
-    // Check the min and max values before proceeding
-    // console.log("Real Min:", realMin, "Real Max:", realMax);
-    // console.log("Imag Min:", imagMin, "Imag Max:", imagMax);
-    // // Find the global min and max for both axes (x and y)
-    // let minVal = Math.min(realMin, imagMin);
-    // let maxVal = Math.max(realMax, imagMax);
-
-    // Set the range for both axes to the same min and max values
-    let layout = {
-        title: 'Nyquist Plot',
-        xaxis: {
-            title: 'Real Impedance (Ω)',
-            // range: [minVal, maxVal]  // Set x-axis range to the same as y-axis
-        },
-        yaxis: {
-            title: '- Imaginary Impedance (Ω)',
-            // range: [minVal, maxVal]  // Set y-axis range to the same as x-axis
-        },
-        showlegend: false
-    };
-
-    Plotly.newPlot('nyquist-plot', data, layout);
-    
-    const layout2 = {
-      title: 'Nyquist Plot (fixed grid)',
-      xaxis: { title: 'Real Impedance (Ω)', range: [0, 0.02] },
-      yaxis: { title: '- Imaginary Impedance (Ω)', range: [0, 0.02] },
-      showlegend: false
-    };
-
-    Plotly.newPlot('alt-plot', data, layout2);
+    return { real: impedance.real, neg_imag: impedance.neg_imag };
 }
+
+function updateNyquistPlot() {
+    const newImpedance = getCircuitImpedance()
+    if (!newImpedance ||
+    !Array.isArray(newImpedance.real)     ||
+    !Array.isArray(newImpedance.neg_imag) ||
+    nyquistTraceIndex === null) {
+        console.error('updateNyquistPlot > invalid data or plot not ready');
+        return;
+    }
+
+
+    if (nyquistTraceIndex !== -1) {
+        Plotly.restyle('nyquist-plot', {
+            x: [newImpedance.real],
+            y: [newImpedance.neg_imag]
+        }, [nyquistTraceIndex]);
+
+        Plotly.restyle('fix-plot', {
+            x: [newImpedance.real],
+            y: [newImpedance.neg_imag]
+        }, [nyquistTraceIndex]);
+    }
+}
+
+
+// --- Generate semicircle trace ---
+function generateSemicircleTrace(centerX, centerY, radius, groupId, color, label) {
+    const numPoints = 100;
+    const x = [], y = [];
+
+    for (let i = 0; i <= numPoints; i++) {
+        const theta = Math.PI * (i / numPoints);
+        x.push(centerX + radius * Math.cos(theta));
+        y.push(centerY + radius * Math.sin(theta));  // negative for Nyquist lower-half
+    }
+
+    return {
+        x,
+        y,
+        mode: 'lines',
+        type: 'scatter',
+        name: label,
+        line: { color: color, width: 2 },
+        uid: groupId
+    };
+}
+
+// --- Plot or update semicircle ---
+function plotOrUpdateSemicircle(centerX, centerY, radius, groupId, color, label) {
+    const trace = generateSemicircleTrace(centerX, centerY, radius, groupId, color, label);
+    const plotDiv = document.getElementById('nyquist-plot');
+    const traceIndex = plotDiv.data.findIndex(t => t.uid === groupId);
+
+    if (traceIndex !== -1) {
+        Plotly.deleteTraces('nyquist-plot', traceIndex);
+        Plotly.deleteTraces('fix-plot', traceIndex);
+    }
+    Plotly.addTraces('nyquist-plot', trace);
+    Plotly.addTraces('fix-plot', trace);
+
+}
+
+// --- Handle input group creation ---
+function createSemicircleInputs() {
+    const groupId = 'semicircle-' + Date.now();
+    const color = colorPalette[colorIndex % colorPalette.length];
+    const label = `Semicircle ${colorIndex + 1}`;
+
+    const group = document.createElement('div');
+    group.className = 'semicircle-group';
+    group.id = groupId;
+
+    group.innerHTML = `
+        <div class="controls control-group">
+            <label class="form-label">Center X: <input type="number" step="0.001" class="center-x form-control" value="0.001"></label>
+            <label class="form-label">Center Y: <input type="number" step="0.001" class="center-y form-control" value="0"></label>
+            <label class="form-label">Radius: <input type="number" step="0.001" class="radius form-control" value="0.001"></label>
+            <button class="button btn-secondary delete-btn">Delete</button>
+        </div>
+    `;
+
+    semicircleControls.appendChild(group);
+
+    const centerXInput = group.querySelector('.center-x');
+    const centerYInput = group.querySelector('.center-y');
+    const radiusInput = group.querySelector('.radius');
+    const deleteBtn = group.querySelector('.delete-btn');
+
+    function updateSemicircle() {
+        const centerX = parseFloat(centerXInput.value);
+        const centerY = parseFloat(centerYInput.value);
+        const radius = parseFloat(radiusInput.value);
+        plotOrUpdateSemicircle(centerX, centerY, radius, groupId, color, label);
+    }
+
+    centerXInput.addEventListener('input', updateSemicircle);
+    centerYInput.addEventListener('input', updateSemicircle);
+    radiusInput.addEventListener('input', updateSemicircle);
+
+    deleteBtn.addEventListener('click', () => {
+        const plotDiv = document.getElementById('nyquist-plot');
+        const traceIndex = plotDiv.data.findIndex(t => t.uid === groupId);
+        if (traceIndex !== -1) {
+            Plotly.deleteTraces('nyquist-plot', traceIndex);
+        }
+        group.remove();
+    });
+
+    updateSemicircle();  // Initial draw
+    colorIndex++;
+}
+
 
 // Function to synchronize the input field with the slider (when the slider changes)
 function syncSlider(elementId) {
@@ -258,7 +376,7 @@ function syncSlider(elementId) {
     let inputValue = parseFloat(sliderValue);
     // Update the input field when the slider changes
     document.getElementById(`${elementId}-input`).value = inputValue;
-    updatePlot();  // Update the plot when the slider value changes
+    updateNyquistPlot();  // Update the plot when the slider value changes
 }
 
 // Function to synchronize the slider with the input field (when the input field changes)
@@ -269,7 +387,7 @@ function syncInputField(elementId) {
         sliderValue.value = inputValue;  // Update the slider position
     }
     
-    updatePlot();  // Update the plot when the input field value changes
+    updateNyquistPlot();  // Update the plot when the input field value changes
 }
 
 // Function to select the circuit model based on the clicked image
@@ -281,11 +399,12 @@ function selectCircuit(model) {
     document.getElementById("Circuit4").style.display = model === 'Circuit4' ? "block" : "none";
 
     
-    updatePlot();  // Re-render the plot with the current values
+    initNyquistPlot();  // Re-render the plot with the current values
 }
 
+// --- Initialization & Event Listener ---
 // Initial plot update
-updatePlot();
+initNyquistPlot();
 
 // Add event listeners to the input fields
 document.querySelectorAll("input[type='number']").forEach((input) => {
@@ -302,3 +421,7 @@ document.querySelectorAll("input[type='range']").forEach((slider) => {
         syncSlider(elementId);
     });
 });
+
+addSemicircleBtn.addEventListener('click', createSemicircleInputs);
+
+
