@@ -361,6 +361,7 @@ function createSemicircleInputs() {
         const traceIndex = plotDiv.data.findIndex(t => t.uid === groupId);
         if (traceIndex !== -1) {
             Plotly.deleteTraces('nyquist-plot', traceIndex);
+            Plotly.deleteTraces('fix-plot', traceIndex);
         }
         group.remove();
     });
